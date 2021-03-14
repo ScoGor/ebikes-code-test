@@ -10,6 +10,16 @@
         </template>
         <template if:true={products.data}>
             <template if:true={products.data.records.length}>
+                <div>
+                    <lightning-combobox 
+                    name="itemsperpage"
+                    label="Items Per Page:"
+                    value={pageSize}
+                    placeholder=""
+                    options={bikesPerPageOptions}
+                    onchange={handleItemsPerPageChange} >
+                    </lightning-combobox>
+                </div>
                 <div class="content">
                     <template
                         for:each={products.data.records}

@@ -28,7 +28,7 @@ export default class ProductTileList extends LightningElement {
     pageNumber = 1;
 
     /** The number of items on a page. */
-    pageSize;
+    pageSize = '5';
 
     /** The total number of items matching the selection. */
     totalItemCount = 0;
@@ -45,7 +45,7 @@ export default class ProductTileList extends LightningElement {
     /**
      * Load the list of available products.
      */
-    @wire(getProducts, { filters: '$filters', pageNumber: '$pageNumber' })
+    @wire(getProducts, { filters: '$filters', pageNumber: '$pageNumber', pageSize: '$pageSize' })
     products;
 
     connectedCallback() {
@@ -82,5 +82,18 @@ export default class ProductTileList extends LightningElement {
 
     handleNextPage() {
         this.pageNumber = this.pageNumber + 1;
+    }
+
+    get bikesPerPageOptions() {
+        return [
+            { label: '1', value: '1' },
+            { label: '5', value: '5' },
+            { label: '10', value: '10' },
+            { label: '20', value: '20' }
+        ];
+    }
+
+    handleItemsPerPageChange(event) {
+        this.pageSize = event.detail.value;
     }
 }

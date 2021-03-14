@@ -1,5 +1,4 @@
 public with sharing class ProductController {
-    static Integer PAGE_SIZE = 9;
 
     public class Filters {
         @AuraEnabled
@@ -12,13 +11,15 @@ public with sharing class ProductController {
         public String[] materials { get; set; }
         @AuraEnabled
         public String[] levels { get; set; }
+        @AuraEnabled
+        public String[] frameColors { get; set; }
     }
 
     @AuraEnabled(Cacheable=true)
-    public static PagedResult getProducts(Filters filters, Integer pageNumber) {
+    public static PagedResult getProducts(Filters filters, Integer pageNumber, Integer pageSize) {
         String key, whereClause = '';
         Decimal maxPrice;
-        String[] categories, materials, levels, criteria = new List<String>{};
+        String[] categories, materials, levels, frameColors, criteria = new List<String>{};
         if (filters != null) {
             maxPrice = filters.maxPrice;
             materials = filters.materials;
@@ -43,11 +44,14 @@ public with sharing class ProductController {
                 materials = filters.materials;
                 criteria.add('Material__c IN :materials');
             }
+            if (filters.frameColors != null) {
+                frameColors = filters.frameColors;
+                criteria.add('Frame_Color__c IN :frameColors');
+            }
             if (criteria.size() > 0) {
                 whereClause = 'WHERE ' + String.join(criteria, ' AND ');
             }
         }
-        Integer pageSize = ProductController.PAGE_SIZE;
         Integer offset = (pageNumber - 1) * pageSize;
         PagedResult result = new PagedResult();
         result.pageSize = pageSize;
@@ -80,5 +84,24 @@ public with sharing class ProductController {
             WHERE Product_Family__c = :familyId AND Id != :productId
             WITH SECURITY_ENFORCED
         ];
+    }
+
+    @AuraEnabled
+    public static integer getProductInStockQuantity(string productName){
+        Http http = new Http();
+        HttpRequest request = new HttpRequest();
+        request.setEndpoint('https://vpsdevds2-viasat.cs32.force.com/paymentservice/services/apexrest/ebikestockcheck/?pname=' + EncodingUtil.urlEncode(productName,'UTF-8'));
+        request.setMethod('GET');
+        request.setHeader('Accept', 'application/json');
+        request.setHeader('Content-Type', 'application/json');
+        request.setHeader('x-api-key', 'abc123');
+        request.setHeader('Cookie', 'BrowserId=Jlnf3nImEeumZZ88qOXBuw');
+        try {
+            HttpResponse response = http.send(request);
+            Map<String, Object> results = (Map<String, Object>) JSON.deserializeUntyped(response.getBody());
+            return (Integer)results.get('currentInventory');
+        } catch (Exception e){
+            return 0;
+        }
     }
 }

@@ -23,6 +23,9 @@ import FOPK_FIELD from '@salesforce/schema/Product__c.Fork__c';
 import FRONT_BRAKES_FIELD from '@salesforce/schema/Product__c.Front_Brakes__c';
 import REAR_BRAKES_FIELD from '@salesforce/schema/Product__c.Rear_Brakes__c';
 
+// add the getProductInStockQuantity method from apex
+import getProductInStockQuantity from '@salesforce/apex/ProductController.getProductInStockQuantity';
+
 /**
  * Component to display details of a Product__c.
  */
@@ -46,6 +49,9 @@ export default class ProductCard extends NavigationMixin(LightningElement) {
     productName;
     productPictureUrl;
 
+    // Product field for Quantity in Stock
+    inStockQuantity;
+
     /** Load context for Ligthning Messaging Service */
     @wire(MessageContext) messageContext;
 
@@ -66,6 +72,15 @@ export default class ProductCard extends NavigationMixin(LightningElement) {
         const recordData = records[this.recordId];
         this.productName = getFieldValue(recordData, NAME_FIELD);
         this.productPictureUrl = getFieldValue(recordData, PICTURE_URL_FIELD);
+
+        //callout to apex to get the real-time quantity in stock, pass the product name
+        getProductInStockQuantity({productName : this.productName})
+        .then(result => {
+            this.inStockQuantity = result;
+        })
+        .catch(error => {
+            this.inStockQuantity = error;
+        })
     }
 
     /**
